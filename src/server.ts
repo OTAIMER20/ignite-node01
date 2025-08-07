@@ -5,9 +5,12 @@ import cookie from '@fastify/cookie'
 
 const app = fastify()
 
+// Registro do plugin de cookies
 app.register(cookie)
+
+// Corrigido: prefixo com barra inicial
 app.register(transactionsRoutes, {
-  prefix: 'transactions',
+  prefix: '/transactions',
 })
 
 app

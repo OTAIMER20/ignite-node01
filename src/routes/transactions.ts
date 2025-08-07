@@ -5,6 +5,7 @@ import { randomUUID } from 'crypto'
 import { checkSessionIdExist } from '../middleware/check-sessionid-exist'
 
 export async function transactionsRoutes(app: FastifyInstance) {
+  // Rota para listar todas as transações
   app.get(
     '/',
     {
@@ -17,12 +18,11 @@ export async function transactionsRoutes(app: FastifyInstance) {
         .where('session_id', sessionId)
         .select()
 
-      return {
-        transactions,
-      }
+      return { transactions }
     },
   )
 
+  // Rota para obter o resumo (soma dos valores)
   app.get(
     '/summary',
     {
@@ -36,24 +36,22 @@ export async function transactionsRoutes(app: FastifyInstance) {
         .sum('amount', { as: 'amount' })
         .first()
 
-      return {
-        summary,
-      }
+      return { summary }
     },
   )
 
+  // Rota para obter uma transação por ID
   app.get(
     '/:id',
     {
       preHandler: [checkSessionIdExist],
     },
     async (request) => {
-      const getTransactionsParamsSchema = z.object({
+      const getTransactionParamsSchema = z.object({
         id: z.string().uuid(),
       })
 
-      const { id } = getTransactionsParamsSchema.parse(request.params)
-
+      const { id } = getTransactionParamsSchema.parse(request.params)
       const { sessionId } = request.cookies
 
       const transaction = await db('transactions')
@@ -63,12 +61,11 @@ export async function transactionsRoutes(app: FastifyInstance) {
         })
         .first()
 
-      return {
-        transaction,
-      }
+      return { transaction }
     },
   )
 
+  // Rota para criar uma nova transação
   app.post('/', async (request, reply) => {
     const createTransactionBodySchema = z.object({
       title: z.string(),
@@ -82,15 +79,17 @@ export async function transactionsRoutes(app: FastifyInstance) {
 
     let sessionId = request.cookies.sessionId
 
+    // Criação de nova sessão se não houver cookie
     if (!sessionId) {
       sessionId = randomUUID()
 
       reply.cookie('sessionId', sessionId, {
         path: '/',
-        maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+        maxAge: 1000 * 60 * 60 * 24 * 7, // 7 dias
       })
     }
 
+    // Inserção no banco de dados
     await db('transactions').insert({
       id: randomUUID(),
       title,
