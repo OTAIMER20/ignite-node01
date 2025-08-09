@@ -16,6 +16,7 @@ app.register(transactionsRoutes, {
 app
   .listen({
     port: env.PORT,
+    host: '0.0.0.0', // necessário para aceitar conexões externas
   })
   .then(() => {
     console.log('HTTP Server is Running!')
